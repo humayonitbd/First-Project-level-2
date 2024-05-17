@@ -6,9 +6,9 @@ const createStudent = async (req: Request, res: Response) => {
   try {
     const { student: studentData } = req.body;
 
-    const { error } = studentSchemaJoi.validate(studentData);
-    // console.log(error,value)
-    const result = await StudentServices.createStudentService(studentData);
+    const { error, value } = studentSchemaJoi.validate(studentData);
+    // console.log({error},{value})
+    const result = await StudentServices.createStudentService(value);
 
     if (error) {
       res.status(500).json({
