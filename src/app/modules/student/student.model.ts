@@ -92,82 +92,98 @@ const localGurdianSchema = new Schema<TLocalGurdian>({
 });
 
 //Create main Schema...
-const studentSchema = new Schema<TStudent, StudentModel>({
-  id: { type: String, trim: true, required: true, unique: true },
-  password: {
-    type: String,
-    trim: true,
-    required: true,
-    unique: true,
-    maxlength: [15, 'Password more then 15 charecter...'],
-  },
-  name: {
-    type: userNameSchema,
-    required: [true, 'User Name is Required'],
-  },
-  gender: {
-    type: String,
-    trim: true,
-    enum: {
-      values: ['male', 'female', 'other'],
-      message:
-        "The gender field can only be one of the following: 'male','female', or 'other'.",
+const studentSchema = new Schema<TStudent, StudentModel>(
+  {
+    id: { type: String, trim: true, required: true, unique: true },
+    password: {
+      type: String,
+      trim: true,
+      required: true,
+      maxlength: [15, 'Password more then 15 charecter...'],
     },
-    required: true,
-  },
-  deteOfBirth: { type: String },
-  email: {
-    type: String,
-    trim: true,
-    required: [true, 'User email is Required'],
-    unique: true,
-    validate: {
-      validator: (value: string) => validator.isEmail(value),
-      message: '{VALUE} is not a valid email type!',
+    name: {
+      type: userNameSchema,
+      required: [true, 'User Name is Required'],
+    },
+    gender: {
+      type: String,
+      trim: true,
+      enum: {
+        values: ['male', 'female', 'other'],
+        message:
+          "The gender field can only be one of the following: 'male','female', or 'other'.",
+      },
+      required: true,
+    },
+    deteOfBirth: { type: String },
+    email: {
+      type: String,
+      trim: true,
+      required: [true, 'User email is Required'],
+      unique: true,
+      validate: {
+        validator: (value: string) => validator.isEmail(value),
+        message: '{VALUE} is not a valid email type!',
+      },
+    },
+    contactNo: {
+      type: String,
+      trim: true,
+      required: [true, 'User contact number is Required'],
+    },
+    emergencyContactNo: {
+      type: String,
+      required: [true, 'Emergency contact number is Required'],
+    },
+    bloodGroup: {
+      type: String,
+      enum: {
+        values: ['A+', 'O+', 'A', 'B', 'AB', 'O', 'O-', 'AB+', 'AB-', 'B+'],
+        message:
+          "The blood group field can only be one of the following:'A+', 'O+', 'A', 'B', 'AB', 'O', 'O-', 'AB+', 'AB-', 'B+'.",
+      },
+    },
+    presentAddress: {
+      type: String,
+      required: [true, 'Present address is Required'],
+    },
+    permanentAddress: {
+      type: String,
+      required: [true, 'Permament address is Required'],
+    },
+    guardian: {
+      type: guardianSchema,
+      required: [true, 'Guardin address is Required'],
+    },
+    localGurdian: {
+      type: localGurdianSchema,
+      required: [true, 'local address is Required'],
+    },
+    profileImg: { type: String },
+    isActive: {
+      type: String,
+      enum: {
+        values: ['active', 'blocked'],
+        message: '{VALUE} is not valid!',
+      },
+      default: 'active',
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
     },
   },
-  contactNo: {
-    type: String,
-    trim: true,
-    required: [true, 'User contact number is Required'],
-  },
-  emergencyContactNo: {
-    type: String,
-    required: [true, 'Emergency contact number is Required'],
-  },
-  bloodGroup: {
-    type: String,
-    enum: {
-      values: ['A+', 'O+', 'A', 'B', 'AB', 'O', 'O-', 'AB+', 'AB-', 'B+'],
-      message:
-        "The blood group field can only be one of the following:'A+', 'O+', 'A', 'B', 'AB', 'O', 'O-', 'AB+', 'AB-', 'B+'.",
+  {
+    toJSON: {
+      virtuals: true,
     },
   },
-  presentAddress: {
-    type: String,
-    required: [true, 'Present address is Required'],
-  },
-  permanentAddress: {
-    type: String,
-    required: [true, 'Permament address is Required'],
-  },
-  guardian: {
-    type: guardianSchema,
-    required: [true, 'Guardin address is Required'],
-  },
-  localGurdian: {
-    type: localGurdianSchema,
-    required: [true, 'local address is Required'],
-  },
-  profileImg: { type: String },
-  isActive: {
-    type: String,
-    enum: {
-      values: ['active', 'blocked'],
-      message: '{VALUE} is not valid!',
-    },
-    default: 'active',
-  },
+);
+
+//mongoose virtual
+
+studentSchema.virtual('fullName').get(function () {
+  return `${this.name.firstName}  ${this.name.middleName}  ${this.name.lastName}`;
 });
 
 //pre save middleware hook : will work on create function
@@ -184,8 +200,29 @@ studentSchema.pre('save', async function (next) {
 });
 
 //post save middleware hook
-studentSchema.post('save', function () {
-  console.log(this, 'post hook : we saved our data!');
+studentSchema.post('save', function (doc, next) {
+  doc.password = ' ';
+  // console.log(this, 'post hook : we saved our data!');
+  next();
+});
+
+// Query middleware implement..
+
+studentSchema.pre('find', function (next) {
+  this.find({ isDeleted: { $ne: true } });
+
+  next();
+});
+studentSchema.pre('findOne', function (next) {
+  this.find({ isDeleted: { $ne: true } });
+
+  next();
+});
+
+studentSchema.pre('aggregate', function (next) {
+  this.pipeline().unshift({ $match: { isDeleted: { $ne: true } } });
+
+  next();
 });
 
 // creating a custom static method..

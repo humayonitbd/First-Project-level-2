@@ -50,6 +50,7 @@ export type TStudent = {
   localGurdian: TLocalGurdian;
   profileImg?: string;
   isActive: 'active' | 'blocked';
+  isDeleted: boolean;
 };
 
 // for crating static

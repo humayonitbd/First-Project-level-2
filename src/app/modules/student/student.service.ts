@@ -25,7 +25,13 @@ const getAllStudentService = async () => {
 };
 
 const getSingleStudentService = async (id: string) => {
-  const result = await Student.findOne({ id });
+  // const result = await Student.findOne({ id });
+  const result = await Student.aggregate([{ $match: { id: id } }]);
+  return result;
+};
+
+const deleteSingleStudentService = async (id: string) => {
+  const result = await Student.updateOne({ id }, { isDeleted: true });
   return result;
 };
 
@@ -33,4 +39,5 @@ export const StudentServices = {
   createStudentService,
   getAllStudentService,
   getSingleStudentService,
+  deleteSingleStudentService,
 };
