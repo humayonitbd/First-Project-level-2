@@ -7,6 +7,9 @@ import {
   TUserName,
 } from './student.interface';
 import validator from 'validator';
+import bcrypt from 'bcrypt';
+import config from '../../config';
+
 const userNameSchema = new Schema<TUserName>({
   firstName: {
     type: String,
@@ -91,6 +94,13 @@ const localGurdianSchema = new Schema<TLocalGurdian>({
 //Create main Schema...
 const studentSchema = new Schema<TStudent, StudentModel>({
   id: { type: String, trim: true, required: true, unique: true },
+  password: {
+    type: String,
+    trim: true,
+    required: true,
+    unique: true,
+    maxlength: [15, 'Password more then 15 charecter...'],
+  },
   name: {
     type: userNameSchema,
     required: [true, 'User Name is Required'],
@@ -161,8 +171,16 @@ const studentSchema = new Schema<TStudent, StudentModel>({
 });
 
 //pre save middleware hook : will work on create function
-studentSchema.pre('save', function () {
-  console.log(this, 'pre hook : we will save an data!');
+studentSchema.pre('save', async function (next) {
+  // console.log(this, 'pre hook : we will save an data!');
+  // eslint-disable-next-line @typescript-eslint/no-this-alias
+  const user = this;
+  // hashing password and save into DB
+  user.password = await bcrypt.hash(
+    user.password,
+    Number(config.bcrypt_solt_rounds),
+  );
+  next();
 });
 
 //post save middleware hook
