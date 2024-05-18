@@ -1,7 +1,13 @@
 import { Schema, model } from 'mongoose';
-import { Guardian, LocalGurdian, Student, UserName } from './student.interface';
+import {
+  TGuardian,
+  TLocalGurdian,
+  TStudent,
+  StudentModel,
+  TUserName,
+} from './student.interface';
 import validator from 'validator';
-const userNameSchema = new Schema<UserName>({
+const userNameSchema = new Schema<TUserName>({
   firstName: {
     type: String,
     required: [true, 'First name is Required'],
@@ -30,7 +36,7 @@ const userNameSchema = new Schema<UserName>({
   },
 });
 
-const guardianSchema = new Schema<Guardian>({
+const guardianSchema = new Schema<TGuardian>({
   fatherName: {
     type: String,
     trim: true,
@@ -61,7 +67,7 @@ const guardianSchema = new Schema<Guardian>({
   },
 });
 
-const localGurdianSchema = new Schema<LocalGurdian>({
+const localGurdianSchema = new Schema<TLocalGurdian>({
   name: {
     type: String,
     trim: true,
@@ -83,7 +89,7 @@ const localGurdianSchema = new Schema<LocalGurdian>({
 });
 
 //Create main Schema...
-const studentSchema = new Schema<Student>({
+const studentSchema = new Schema<TStudent, StudentModel>({
   id: { type: String, trim: true, required: true, unique: true },
   name: {
     type: userNameSchema,
@@ -154,5 +160,28 @@ const studentSchema = new Schema<Student>({
   },
 });
 
+//pre save middleware hook : will work on create function
+studentSchema.pre('save', function () {
+  console.log(this, 'pre hook : we will save an data!');
+});
+
+//post save middleware hook
+studentSchema.post('save', function () {
+  console.log(this, 'post hook : we saved our data!');
+});
+
+// creating a custom static method..
+
+studentSchema.statics.isUserExists = async function (id: string) {
+  const existingUser = await Student.findOne({ id });
+  return existingUser;
+};
+
+// create custom method call here...
+// studentSchema.methods.isUserExits = async function(id:string){
+//   const existingUser = await Student.findOne({id});
+//   return existingUser;
+// }
+
 //Create  model..
-export const StudentModel = model<Student>('Student', studentSchema);
+export const Student = model<TStudent, StudentModel>('Student', studentSchema);
