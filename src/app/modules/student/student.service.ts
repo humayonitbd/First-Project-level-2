@@ -35,9 +35,24 @@ const deleteSingleStudentService = async (id: string) => {
   return result;
 };
 
+const updateSingleStudentService = async (id:string, data:object | any) => {
+  // console.log(data)
+  const result = await Student.updateOne(
+    { id },
+    {
+      $set: {
+        gender: data.gender,
+        email: data.email,
+      },
+    },
+  );
+  return result;
+};
+
 export const StudentServices = {
   createStudentService,
   getAllStudentService,
   getSingleStudentService,
   deleteSingleStudentService,
+  updateSingleStudentService,
 };
